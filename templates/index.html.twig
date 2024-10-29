@@ -1,0 +1,23 @@
+{# templates/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Transcripción de WAV{% endblock %}
+
+{% block body %}
+    <div class="mt-5">
+        <h1 class="mb-4">Subir archivo WAV para transcripción</h1>
+        <form action="{{ path('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-4">
+            <div class="mb-3">
+                <input type="file" name="file" accept=".wav" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Subir y Transcribir</button>
+        </form>
+        {% if transcription is defined %}
+            <div id="transcription" class="mt-4">
+                <h2>Transcripción:</h2>
+                <pre>{{ transcription }}</pre>
+                <a href="{{ download_link }}" class="btn btn-success mt-2">Descargar Transcripción</a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
