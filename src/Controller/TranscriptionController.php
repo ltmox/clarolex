@@ -41,8 +41,8 @@ class TranscriptionController extends AbstractController
                 // Especificar el archivo de salida para la transcripción en el directorio transcripciones
                 $outputFilePath = $transcriptionDir . '/' . str_replace('.wav', '.txt', $fileName);
 
-                // Llamar a Whisper para transcribir el archivo
-                $command = escapeshellcmd("whisper-cpp --model /Users/mox/Projects/whisper.cpp/models/ggml-small.bin -l es -pc --output-txt $filePath");
+                // Llamar a Whisper para transcribir el archivo con colores
+                $command = escapeshellcmd("whisper-cpp --model /Users/mox/Projects/whisper.cpp/models/ggml-small.bin -l es --print-colors --output-txt $filePath");
                 $output = shell_exec($command);
 
                 // Mover el archivo de transcripción a la carpeta transcripciones

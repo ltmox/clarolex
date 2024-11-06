@@ -1,43 +1,51 @@
-{# templates/index.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Transcripción de WAV{% endblock %}
 
 {% block body %}
-    <body class="d-flex h-100 text-center text-bg-dark">
+<body class="d-flex h-100 text-center text-bg-dark">
   <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
     <header class="mb-auto">
-       <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center">
         <img src="{{ asset('images/logo_aif_color.png') }}" alt="Logo AIF" class="me-2" style="height: 40px;">
         <h3 class="float-md-start mb-0">ClaroLEX</h3>
         <nav class="nav nav-masthead justify-content-center float-md-end">
-            <a class="nav-link fw-bold py-1 px-0" href="{{ path('index') }}">Inicio</a>
-            <a class="nav-link fw-bold py-1 px-0 active" aria-current="page" href="#">¿Cómo funciona?</a>
-            <a class="nav-link fw-bold py-1 px-0" href="#">Contacto</a>
+          <a class="nav-link fw-bold py-1 px-0" href="{{ path('index') }}">Inicio</a>
+          <a class="nav-link fw-bold py-1 px-0 active" aria-current="page" href="#">¿Cómo funciona?</a>
+          <a class="nav-link fw-bold py-1 px-0" href="#">Contacto</a>
         </nav>
       </div>
-    
-    
-    
+    </header>
+
     <div class="mt-5">
       <h1 class="mb-4">Subí tu archivo de audio</h1>
       <div class="card bg-dark text-white mb-3">
         <div class="card-body">
           <h5 class="card-title">Instrucciones para subir el archivo</h5>
-          <p class="card-text">Por favor, subí un archivo de audio. El archivo será procesado y transcrito automáticamente. Una vez completada la transcripción, podrás ver el texto y descargar el archivo de transcripción.</p>
+          <p class="card-text">Por favor, sube un archivo de audio. El archivo será procesado y transcrito automáticamente. Una vez completada la transcripción, podrás ver el texto y descargar el archivo de transcripción.</p>
         </div>
-        <form action="{{ path('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-4">
-            <div class="mb-3">
-                <input type="file" name="file" accept=".wav" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Subir y Transcribir</button>
-        </form>
-        {% if transcription is defined %}
-            <div id="transcription" class="mt-4">
-                <h2>Transcripción:</h2>
-                <pre>{{ transcription }}</pre>
-                <a href="{{ download_link }}" class="btn btn-success mt-2">Descargar Transcripción</a>
-            </div>
-        {% endif %}
+      </div>
+      <form action="{{ path('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-4">
+        <div class="mb-3">
+          <input type="file" name="file" accept=".wav" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Subir y Transcribir</button>
+      </form>
+      {% if transcription is defined %}
+        <div id="transcription" class="mt-4">
+          <h2>Transcripción:</h2>
+          <pre id="transcription-content">{{ transcription }}</pre>
+          <a href="{{ download_link }}" class="btn btn-success mt-2">Descargar Transcripción</a>
+        </div>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            var ansi_up = new AnsiUp;
+            var transcriptionContent = document.getElementById("transcription-content").innerText;
+            document.getElementById("transcription-content").innerHTML = ansi_up.ansi_to_html(transcriptionContent);
+          });
+        </script>
+      {% endif %}
     </div>
+  </div>
+</body>
 {% endblock %}
