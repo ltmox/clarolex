@@ -4,8 +4,28 @@
 {% block title %}Transcripción de WAV{% endblock %}
 
 {% block body %}
+    <body class="d-flex h-100 text-center text-bg-dark">
+  <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+    <header class="mb-auto">
+       <div class="d-flex justify-content-between align-items-center">
+        <img src="{{ asset('images/logo_aif_color.png') }}" alt="Logo AIF" class="me-2" style="height: 40px;">
+        <h3 class="float-md-start mb-0">ClaroLEX</h3>
+        <nav class="nav nav-masthead justify-content-center float-md-end">
+            <a class="nav-link fw-bold py-1 px-0" href="{{ path('index') }}">Inicio</a>
+            <a class="nav-link fw-bold py-1 px-0 active" aria-current="page" href="#">¿Cómo funciona?</a>
+            <a class="nav-link fw-bold py-1 px-0" href="#">Contacto</a>
+        </nav>
+      </div>
+    
+    
+    
     <div class="mt-5">
-        <h1 class="mb-4">Subir archivo WAV para transcripción</h1>
+      <h1 class="mb-4">Subí tu archivo de audio</h1>
+      <div class="card bg-dark text-white mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Instrucciones para subir el archivo</h5>
+          <p class="card-text">Por favor, subí un archivo de audio. El archivo será procesado y transcrito automáticamente. Una vez completada la transcripción, podrás ver el texto y descargar el archivo de transcripción.</p>
+        </div>
         <form action="{{ path('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-4">
             <div class="mb-3">
                 <input type="file" name="file" accept=".wav" class="form-control" required>
