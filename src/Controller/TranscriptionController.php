@@ -45,9 +45,14 @@ class TranscriptionController extends AbstractController
                 $command = escapeshellcmd("whisper-cpp --model /Users/mox/Projects/whisper.cpp/models/ggml-small.bin -l es --print-colors --output-txt $filePath");
                 $output = shell_exec($command);
                 $colorOutput = shell_exec($command);
+                // Limpiar códigos ANSI y caracteres especiales
+                $cleanText = preg_replace('/\x1b\[[0-9;]*[mGKH]/', '', $colorOutput); // Elimina códigos ANSI
+                $cleanText = preg_replace('/[\x00-\x1F\x7F]/', '', $cleanText); // Elimina caracteres de control
+                $cleanText = preg_replace('/\[[\d:\.]+\]/', '', $cleanText); // Elimina marcas de tiempo [00:00.000]
+                $cleanText = trim(preg_replace('/\s+/', ' ', $cleanText)); // Limpia espacios múltiples
+                // Guardar texto limpio en archivo
+                file_put_contents($outputFilePath, $cleanText);
 
-                // Guardar la transcripción original en el archivo
-                file_put_contents($outputFilePath, strip_tags($colorOutput));
     
                 return $this->render('result.html.twig', [
                  'colorOutput' => $colorOutput,
