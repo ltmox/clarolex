@@ -1,0 +1,27 @@
+{# filepath: templates/transcription/result.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.0.1/ansi_up.min.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h2>Resultado de la Transcripción</h2>
+        
+        <div id="transcription-output" style="background: #1e1e1e; padding: 20px; border-radius: 5px; color: white; font-family: monospace;">
+        </div>
+
+        <a href="{{ downloadPath }}" class="btn btn-primary mt-3">Descargar transcripción</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ansiUp = new AnsiUp();
+            const colorOutput = `{{ colorOutput|raw|replace({"\n": "\\n"}) }}`;
+            const htmlOutput = ansiUp.ansi_to_html(colorOutput);
+            document.getElementById('transcription-output').innerHTML = htmlOutput;
+        });
+    </script>
+{% endblock %}

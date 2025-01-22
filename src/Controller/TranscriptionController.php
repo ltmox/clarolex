@@ -44,27 +44,35 @@ class TranscriptionController extends AbstractController
                 // Llamar a Whisper para transcribir el archivo con colores
                 $command = escapeshellcmd("whisper-cpp --model /Users/mox/Projects/whisper.cpp/models/ggml-small.bin -l es --print-colors --output-txt $filePath");
                 $output = shell_exec($command);
+                $colorOutput = shell_exec($command);
 
-                // Mover el archivo de transcripción a la carpeta transcripciones
-                if (file_exists($filePath . '.txt')) {
-                    rename($filePath . '.txt', $outputFilePath);
-                } else {
-                    throw new \Exception('Error al generar el archivo de transcripción.');
-                }
-
-                // Leer el contenido del archivo de transcripción
-                $transcriptionContent = file_get_contents($outputFilePath);
-
-                return $this->render('index.html.twig', [
-                    'transcription' => $transcriptionContent,
-                    'download_link' => $this->generateUrl('download_file', ['filename' => basename($outputFilePath)])
+                // Guardar la transcripción original en el archivo
+                file_put_contents($outputFilePath, strip_tags($colorOutput));
+    
+                return $this->render('result.html.twig', [
+                 'colorOutput' => $colorOutput,
+                'downloadPath' => '/transcripciones/' . str_replace('.wav', '.txt', $fileName)
                 ]);
-            } catch (FileException $e) {
-                return new Response('Error al mover el archivo subido.');
-            } catch (\Exception $e) {
-                return new Response($e->getMessage());
-            }
+        // Mover el archivo de transcripción a la carpeta transcripciones
+        if (file_exists($filePath . '.txt')) {
+            rename($filePath . '.txt', $outputFilePath);
+        } else {
+            throw new \Exception('Error al generar el archivo de transcripción.');
         }
+
+        // Leer el contenido del archivo de transcripción
+        $transcriptionContent = file_get_contents($outputFilePath);
+
+        return $this->render('index.html.twig', [
+            'transcription' => $transcriptionContent,
+            'download_link' => $this->generateUrl('download_file', ['filename' => basename($outputFilePath)])
+        ]);
+    } catch (FileException $e) {
+        return new Response('Error al mover el archivo subido.');
+    } catch (\Exception $e) {
+        return new Response($e->getMessage());
+    }
+}
 
         return new Response('Formato de archivo no permitido. Solo se permiten archivos WAV.');
     }
