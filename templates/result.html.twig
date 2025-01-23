@@ -4,15 +4,33 @@
 {% block stylesheets %}
     {{ parent() }}
     <script src="https://cdn.jsdelivr.net/npm/ansi_up@5.0.1/ansi_up.min.js"></script>
+    <style>
+        .transcription-output {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 5px;
+            color: white;
+            font-family: monospace;
+            white-space: pre-wrap; /* Mantiene los saltos de línea */
+        }
+        .timestamp {
+            display: inline-block;
+            width: 150px; /* Ajusta el ancho según sea necesario */
+            text-align: left;
+            vertical-align: top;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
     <div class="container mt-4">
         <h2>Resultado de la Transcripción</h2>
         
-        <div id="transcription-output" style="background: #1e1e1e; padding: 20px; border-radius: 5px; color: white; font-family: monospace;">
+        <div id="transcription-output" class="transcription-output">
         </div>
 
+        <h3 class="mt-4">Texto Limpio</h3>
+        <textarea id="clean-text" class="form-control" rows="10"></textarea>
         <a href="{{ downloadPath }}" class="btn btn-primary mt-3">Descargar transcripción</a>
     </div>
 
@@ -21,7 +39,27 @@
             const ansiUp = new AnsiUp();
             const colorOutput = `{{ colorOutput|raw|replace({"\n": "\\n"}) }}`;
             const htmlOutput = ansiUp.ansi_to_html(colorOutput);
-            document.getElementById('transcription-output').innerHTML = htmlOutput;
+            const lines = htmlOutput.split('\\n');
+            let formattedOutput = '';
+            let cleanText = '';
+
+            lines.forEach(line => {
+                let cleanedLine = line.replace(/--.*?\]/g, ']');
+                const match = cleanedLine.match(/(\[.*?\])/g);
+                if (match) {
+                    match.forEach(timestamp => {
+                        cleanedLine = cleanedLine.replace(timestamp, `<span class="timestamp">${timestamp}</span>`);
+                    });
+                    formattedOutput += `<div>${cleanedLine}</div>`;
+                    cleanText += cleanedLine.replace(/<[^>]*>/g, '').replace(/(\[.*?\])/g, '') + '\n';
+                } else {
+                    formattedOutput += `<div>${cleanedLine}</div>`;
+                    cleanText += cleanedLine.replace(/<[^>]*>/g, '') + '\n';
+                }
+            });
+
+            document.getElementById('transcription-output').innerHTML = formattedOutput;
+            document.getElementById('clean-text').value = cleanText.trim();
         });
     </script>
 {% endblock %}

@@ -55,7 +55,8 @@ class TranscriptionController extends AbstractController
 
     
                 return $this->render('result.html.twig', [
-                 'colorOutput' => $colorOutput,
+                'colorOutput' => $colorOutput,
+                'cleanText' => $cleanText,
                 'downloadPath' => '/transcripciones/' . str_replace('.wav', '.txt', $fileName)
                 ]);
         // Mover el archivo de transcripción a la carpeta transcripciones
