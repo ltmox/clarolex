@@ -10,6 +10,12 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Dompdf\Options;
+
+
+
+
+
 
 class TranscriptionController extends AbstractController
 {
@@ -40,6 +46,12 @@ class TranscriptionController extends AbstractController
 
                 // Especificar el archivo de salida para la transcripción en el directorio transcripciones
                 $outputFilePath = $transcriptionDir . '/' . str_replace('.wav', '.txt', $fileName);
+                // Mapear el modelo seleccionado a su archivo correspondiente
+                $modelMap = [
+                'small' => '/Users/mox/Projects/whisper.cpp/models/ggml-small.bin',
+                'medium' => '/Users/mox/Projects/whisper.cpp/models/ggml-medium.bin',
+                'large' => '/Users/mox/Projects/whisper.cpp/models/ggml-large.bin',
+                ];
 
                 // Llamar a Whisper para transcribir el archivo con colores
                 $command = escapeshellcmd("whisper-cpp --model /Users/mox/Projects/whisper.cpp/models/ggml-small.bin -l es --print-colors --output-txt $filePath");
@@ -59,7 +71,14 @@ class TranscriptionController extends AbstractController
                 'cleanText' => $cleanText,
                 'downloadPath' => '/transcripciones/' . str_replace('.wav', '.txt', $fileName),
                 'audioPath' => '/uploads/' . $fileName 
-            ]);
+        ]);
+
+        $modelFile = $modelMap[$model] ?? $modelMap['small'];
+
+        // Ejecutar el comando con el modelo seleccionado
+        $command = escapeshellcmd("whisper-cpp --model $modelFile -l es --print-colors --output-txt $filePath");
+        shell_exec($command);
+
         // Mover el archivo de transcripción a la carpeta transcripciones
         if (file_exists($filePath . '.txt')) {
             rename($filePath . '.txt', $outputFilePath);
@@ -79,6 +98,8 @@ class TranscriptionController extends AbstractController
     } catch (\Exception $e) {
         return new Response($e->getMessage());
     }
+
+    return new Response('No se ha subido ningún archivo.');
 }
 
         return new Response('Formato de archivo no permitido. Solo se permiten archivos WAV.');

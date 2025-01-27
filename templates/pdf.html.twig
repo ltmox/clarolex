@@ -1,0 +1,76 @@
+{# filepath: /Users/mox/Projects/claroLEX/templates/pdf.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .header img {
+            height: 40px; /* Ajusta la altura de las imágenes */
+            margin-right: 10px;
+        }
+        .header img:last-child {
+            margin-right: 0; /* Elimina el margen derecho de la última imagen */
+        }
+        .header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .content {
+            margin: 20px;
+        }
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 5rem;
+            color: rgba(0, 0, 0, 0.1);
+            z-index: -1;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <img src="data:image/png;base64,{{ logoIalab }}" alt="Logo IALAB">
+            <img src="data:image/png;base64,{{ logoCaf }}" alt="Logo CAF" class="caf-logo">
+            <img src="data:image/png;base64,{{ logoUbatec }}" alt="Logo UBATEC">
+        </div>
+    </div>
+    <div class="content">
+        <h1>Transcripción</h1>
+        <p>{{ transcription }}</p>
+    </div>
+    <div class="footer">
+        <p>Este es un reporte generado automáticamente con asistencia de Inteligencia Artificial y validado por: XXXXX.</p>
+    </div>
+    <div class="watermark">IALAB-TEST</div>
+</body>
+</html>

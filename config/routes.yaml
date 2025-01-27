@@ -12,3 +12,8 @@ download_file:
     path: /download/{filename}
     controller: App\Controller\TranscriptionController::download
     methods: GET
+    
+generate_pdf:
+    path: /generate-pdf
+    controller: App\Controller\ReportController::generatePdf
+    methods: POST

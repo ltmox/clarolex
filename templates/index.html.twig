@@ -30,6 +30,28 @@
             font-size: 1.2rem;
             color: #fff;
         }
+        .logo-container img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .logo-container .caf-logo {
+            height: 80px; /* Ajusta el tamaño del logo CAF */
+        }
+        .nav-masthead .nav-link {
+            padding: 0.75rem 1rem; /* Aumenta el área de clic del menú */
+            font-weight: bold; /* Hace que las fuentes de la navbar estén en negrita */
+        }
+        .sub-navbar {
+            background-color: transparent; /* Fondo transparente */
+            padding: 0.5rem 1rem;
+        }
+        .sub-navbar .nav-link {
+            color: #fff;
+            font-weight: bold; /* Hace que las fuentes de la sub-navbar estén en negrita */
+        }
+        .sub-navbar .nav-link.active {
+            font-weight: bold;
+        }
     </style>
 {% endblock %}
 
@@ -38,14 +60,17 @@
   <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
     <header class="mb-auto">
       <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-          <img src="{{ asset('images/logo-ialab.png') }}" alt="Logo IALAB" class="me-2" style="height: 40px;">
-          <h3 class="mb-0"></h3>
+        <div class="d-flex align-items-center logo-container">
+          <img src="{{ asset('images/ialab-logo.png') }}" alt="Logo IALAB" class="me-2">
+          <img src="{{ asset('images/caf-logo.png') }}" alt="Logo CAF" class="me-2 caf-logo">
+          <img src="{{ asset('images/ubatec.png') }}" alt="Logo UBATEC" class="me-2">
         </div>
-        <nav class="nav nav-masthead justify-content-center flex-grow-1">
-          <a class="nav-link fw-bold py-1 px-0" href="{{ path('index') }}">Inicio</a>
-          <a class="nav-link fw-bold py-1 px-0 active" aria-current="page" href="#">¿Cómo funciona?</a>
-          <a class="nav-link fw-bold py-1 px-0" href="#">Contacto</a>
+      </div>
+      <div class="sub-navbar">
+        <nav class="nav justify-content-center">
+          <a class="nav-link" href="{{ path('index') }}">Inicio</a>
+          <a class="nav-link" href="#">¿Cómo funciona?</a>
+          <a class="nav-link" href="#">Contacto</a>
         </nav>
       </div>
     </header>
@@ -62,26 +87,21 @@
         <div class="mb-3">
           <input type="file" name="file" accept=".wav" class="form-control" required>
         </div>
+        <div class="mb-3">
+          <label for="model">Seleccionar tamaño del modelo</label>
+          <select class="form-control" id="model" name="model">
+              <option value="small">Pequeño</option>
+              <option value="medium">Mediano</option>
+              <option value="large">Grande</option>
+          </select>
+        </div>
         <button type="submit" class="btn btn-primary">Subir y Transcribir</button>
       </form>
       <div id="spinner-container" class="spinner-container">
         <div class="clock-loader"></div>
         <div class="processing-text">Procesando...</div>
       </div>
-      {% if transcription is defined %}
-        <div id="transcription" class="mt-4">
-          <h2>Transcripción:</h2>
-          <pre id="transcription-content">{{ transcription }}</pre>
-          <a href="{{ download_link }}" class="btn btn-success mt-2">Descargar Transcripción</a>
-        </div>
-        <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            var ansi_up = new AnsiUp;
-            var transcriptionContent = document.getElementById("transcription-content").innerText;
-            document.getElementById("transcription-content").innerHTML = ansi_up.ansi_to_html(transcriptionContent);
-          });
-        </script>
-      {% endif %}
+      
     </div>
   </div>
 
