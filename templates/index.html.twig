@@ -80,12 +80,12 @@
       <div class="card bg-dark text-white mb-3">
         <div class="card-body">
           <h5 class="card-title">Instrucciones para subir el archivo</h5>
-          <p class="card-text">Por favor, sube un archivo de audio. El archivo será procesado y transcrito automáticamente. Una vez completada la transcripción, podrás ver el texto y descargar el archivo de transcripción.</p>
+          <p class="card-text">Por favor, sube un archivo de audio o vídeo . El archivo será procesado y transcripto automáticamente. Una vez completada la transcripción, podrás ver el texto y descargar el archivo de transcripción.</p>
         </div>
       </div>
       <form id="upload-form" action="{{ path('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-4">
         <div class="mb-3">
-          <input type="file" name="file" accept=".wav" class="form-control" required>
+          <input type="file" name="file" accept=".wav,.mp3,.mp4,.avi,.mov" class="form-control" required>
         </div>
         <div class="mb-3">
           <label for="model">Seleccionar tamaño del modelo</label>

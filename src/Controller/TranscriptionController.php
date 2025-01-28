@@ -1,5 +1,4 @@
 <?php
-// src/Controller/TranscriptionController.php
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -7,20 +6,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Dompdf\Options;
-
-
-
-
-
 
 class TranscriptionController extends AbstractController
 {
     /**
-     * @Route("/", name="upload_form")
+     * @Route("/", name="index")
      */
     public function index(): Response
     {
@@ -32,91 +22,87 @@ class TranscriptionController extends AbstractController
      */
     public function upload(Request $request): Response
     {
-        // Eliminar el límite de tiempo de ejecución
-        set_time_limit(0);
         $file = $request->files->get('file');
-        if ($file instanceof UploadedFile && $file->getClientOriginalExtension() === 'wav') {
-            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
-            $transcriptionDir = $this->getParameter('kernel.project_dir') . '/public/transcripciones';
-            $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
+        $model = $request->request->get('model');
+
+        if ($file) {
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
+            $transcriptionDir = $this->getParameter('kernel.project_dir') . '/transcripciones';
+
+            // Generar un nombre de archivo único
+            $originalFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFileName = preg_replace('/[^a-zA-Z0-9-_\.]/', '_', $originalFileName);
+            $uniqueFileName = $safeFileName . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $filePath = $uploadsDir . '/' . $uniqueFileName;
 
             try {
-                $file->move($uploadDir, $fileName);
-                $filePath = $uploadDir . '/' . $fileName;
+                $file->move($uploadsDir, $uniqueFileName);
+            } catch (FileException $e) {
+                return new Response('Error al mover el archivo subido: ' . $e->getMessage());
+            }
 
-                // Especificar el archivo de salida para la transcripción en el directorio transcripciones
-                $outputFilePath = $transcriptionDir . '/' . str_replace('.wav', '.txt', $fileName);
-                // Mapear el modelo seleccionado a su archivo correspondiente
-                $modelMap = [
-                'small' => '/Users/mox/Projects/whisper.cpp/models/ggml-small.bin',
-                'medium' => '/Users/mox/Projects/whisper.cpp/models/ggml-medium.bin',
-                'large' => '/Users/mox/Projects/whisper.cpp/models/ggml-large.bin',
-                ];
+            // Extraer el audio si el archivo no es un .wav
+            $audioFilePath = $filePath;
+            if (!in_array($file->getClientOriginalExtension(), ['wav'])) {
+                $audioFilePath = $uploadsDir . '/' . pathinfo($uniqueFileName, PATHINFO_FILENAME) . '.wav';
+                $command = escapeshellcmd("ffmpeg -i $filePath -vn -acodec pcm_s16le -ar 16000 -ac 1 $audioFilePath");
+                shell_exec($command);
+            } else {
+                // Convertir el archivo WAV a 16 kHz si no tiene la frecuencia de muestreo correcta
+                $convertedFilePath = $uploadsDir . '/' . pathinfo($uniqueFileName, PATHINFO_FILENAME) . '-16k.wav';
+                $command = escapeshellcmd("ffmpeg -i $filePath -vn -acodec pcm_s16le -ar 16000 -ac 1 $convertedFilePath");
+                shell_exec($command);
+                $audioFilePath = $convertedFilePath;
+            }
 
-                // Llamar a Whisper para transcribir el archivo con colores
-                $command = escapeshellcmd("whisper-cpp --model /Users/mox/Projects/whisper.cpp/models/ggml-small.bin -l es --print-colors --output-txt $filePath");
-                $output = shell_exec($command);
-                $colorOutput = shell_exec($command);
-                // Limpiar códigos ANSI y caracteres especiales
-                $cleanText = preg_replace('/\x1b\[[0-9;]*[mGKH]/', '', $colorOutput); // Elimina códigos ANSI
-                $cleanText = preg_replace('/[\x00-\x1F\x7F]/', '', $cleanText); // Elimina caracteres de control
-                $cleanText = preg_replace('/\[[\d:\.]+\]/', '', $cleanText); // Elimina marcas de tiempo [00:00.000]
-                $cleanText = trim(preg_replace('/\s+/', ' ', $cleanText)); // Limpia espacios múltiples
-                // Guardar texto limpio en archivo
-                file_put_contents($outputFilePath, $cleanText);
+            // Especificar el archivo de salida para la transcripción en el directorio transcripciones
+            $outputFilePath = $transcriptionDir . '/' . pathinfo($uniqueFileName, PATHINFO_FILENAME) . '.txt';
 
-    
-                return $this->render('result.html.twig', [
+            // Crear el directorio de transcripciones si no existe
+            if (!is_dir($transcriptionDir)) {
+                mkdir($transcriptionDir, 0775, true);
+            }
+
+            // Mapear el modelo seleccionado a su archivo correspondiente
+            $modelMap = [
+                'small' => '/Users/mox/Projects/claroLEX/whisper.cpp/models/ggml-small.bin',
+                'medium' => '/Users/mox/Projects/claroLEX/whisper.cpp/models/ggml-medium.bin',
+                'large' => '/Users/mox/Projects/claroLEX/whisper.cpp/models/ggml-large.bin',
+            ];
+
+            $modelFile = $modelMap[$model] ?? $modelMap['small'];
+
+            // Ejecutar el comando con el modelo seleccionado
+            $command = escapeshellcmd("whisper-cpp --model $modelFile -l es --print-colors --output-txt $audioFilePath");
+            $colorOutput = shell_exec($command);
+
+            // Limpiar códigos ANSI y caracteres especiales
+            $cleanText = preg_replace('/\x1b\[[0-9;]*[mGKH]/', '', $colorOutput); // Elimina códigos ANSI
+            $cleanText = preg_replace('/[\x00-\x1F\x7F]/', '', $cleanText); // Elimina caracteres de control
+            $cleanText = preg_replace('/\[[\d:\.]+\]/', '', $cleanText); // Elimina marcas de tiempo [00:00.000]
+            $cleanText = trim(preg_replace('/\s+/', ' ', $cleanText)); // Limpia espacios múltiples
+
+            // Guardar texto limpio en archivo
+            file_put_contents($outputFilePath, $cleanText);
+
+            // Mover el archivo de transcripción a la carpeta transcripciones
+            if (file_exists($audioFilePath . '.txt')) {
+                rename($audioFilePath . '.txt', $outputFilePath);
+            } else {
+                throw new \Exception('Error al generar el archivo de transcripción.');
+            }
+
+            // Leer el contenido del archivo de transcripción
+            $transcriptionContent = file_get_contents($outputFilePath);
+
+            return $this->render('result.html.twig', [
                 'colorOutput' => $colorOutput,
                 'cleanText' => $cleanText,
-                'downloadPath' => '/transcripciones/' . str_replace('.wav', '.txt', $fileName),
-                'audioPath' => '/uploads/' . $fileName 
-        ]);
-
-        $modelFile = $modelMap[$model] ?? $modelMap['small'];
-
-        // Ejecutar el comando con el modelo seleccionado
-        $command = escapeshellcmd("whisper-cpp --model $modelFile -l es --print-colors --output-txt $filePath");
-        shell_exec($command);
-
-        // Mover el archivo de transcripción a la carpeta transcripciones
-        if (file_exists($filePath . '.txt')) {
-            rename($filePath . '.txt', $outputFilePath);
-        } else {
-            throw new \Exception('Error al generar el archivo de transcripción.');
+                'downloadPath' => '/transcripciones/' . pathinfo($uniqueFileName, PATHINFO_FILENAME) . '.txt',
+                'audioPath' => '/uploads/' . pathinfo($audioFilePath, PATHINFO_BASENAME)
+            ]);
         }
 
-        // Leer el contenido del archivo de transcripción
-        $transcriptionContent = file_get_contents($outputFilePath);
-
-        return $this->render('index.html.twig', [
-            'transcription' => $transcriptionContent,
-            'download_link' => $this->generateUrl('download_file', ['filename' => basename($outputFilePath)])
-        ]);
-    } catch (FileException $e) {
-        return new Response('Error al mover el archivo subido.');
-    } catch (\Exception $e) {
-        return new Response($e->getMessage());
-    }
-
-    return new Response('No se ha subido ningún archivo.');
-}
-
-        return new Response('Formato de archivo no permitido. Solo se permiten archivos WAV.');
-    }
-
-    /**
-     * @Route("/download/{filename}", name="download_file", methods={"GET"})
-     */
-    public function download(string $filename): Response
-    {
-        $transcriptionDir = $this->getParameter('kernel.project_dir') . '/public/transcripciones';
-        $filePath = $transcriptionDir . '/' . $filename;
-
-        if (!file_exists($filePath)) {
-            throw $this->createNotFoundException('El archivo no existe.');
-        }
-
-        return new BinaryFileResponse($filePath);
+        return new Response('No se ha subido ningún archivo.');
     }
 }
