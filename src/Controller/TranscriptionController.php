@@ -5,7 +5,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class TranscriptionController extends AbstractController
 {
@@ -39,6 +40,11 @@ class TranscriptionController extends AbstractController
                 $file->move($uploadsDir, $uniqueFileName);
             } catch (FileException $e) {
                 return new Response('Error al mover el archivo subido: ' . $e->getMessage());
+            }
+
+            // Verificar si el archivo se movió correctamente
+            if (!file_exists($filePath)) {
+                return new Response('Error: el archivo no se movió correctamente.');
             }
 
             // Extraer el audio si el archivo no es un .wav
@@ -88,21 +94,49 @@ class TranscriptionController extends AbstractController
             // Mover el archivo de transcripción a la carpeta transcripciones
             if (file_exists($audioFilePath . '.txt')) {
                 rename($audioFilePath . '.txt', $outputFilePath);
-            } else {
-                throw new \Exception('Error al generar el archivo de transcripción.');
             }
 
-            // Leer el contenido del archivo de transcripción
-            $transcriptionContent = file_get_contents($outputFilePath);
-
             return $this->render('result.html.twig', [
-                'colorOutput' => $colorOutput,
-                'cleanText' => $cleanText,
-                'downloadPath' => '/transcripciones/' . pathinfo($uniqueFileName, PATHINFO_FILENAME) . '.txt',
-                'audioPath' => '/uploads/' . pathinfo($audioFilePath, PATHINFO_BASENAME)
+                'audioPath' => '/uploads/' . basename($audioFilePath),
+                'colorOutput' => $colorOutput, // Aquí deberías agregar el resultado de la transcripción
             ]);
         }
 
         return new Response('No se ha subido ningún archivo.');
+    }
+
+    /**
+     * @Route("/generate_pdf", name="generate_pdf", methods={"POST"})
+     */
+    public function generatePdf(Request $request): Response
+    {
+        $htmlContent = $request->request->get('htmlContent');
+
+        // Convertir las imágenes a base64
+        $logoIalab = base64_encode(file_get_contents($this->getParameter('kernel.project_dir') . '/public/images/ialab-logo.png'));
+        $logoCaf = base64_encode(file_get_contents($this->getParameter('kernel.project_dir') . '/public/images/caf-logo.png'));
+        $logoUbatec = base64_encode(file_get_contents($this->getParameter('kernel.project_dir') . '/public/images/ubatec.png'));
+
+        // Configurar Dompdf
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $html = $this->renderView('pdf.html.twig', [
+            'transcription' => $htmlContent,
+            'logoIalab' => $logoIalab,
+            'logoCaf' => $logoCaf,
+            'logoUbatec' => $logoUbatec,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Enviar el PDF como respuesta
+        return new Response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="transcripcion.pdf"',
+        ]);
     }
 }

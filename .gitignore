@@ -8,3 +8,7 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+# Ignorar la carpeta uploads
+/public/uploads/*
+# Ignorar la carpeta transcripciones
+/transcripciones/*
